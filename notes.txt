@@ -1,0 +1,5 @@
+app generated with pyinstaller
+
+pyinstaller .spec
+
+generate .spec : pyinstaller pythonfile.py --one-file
