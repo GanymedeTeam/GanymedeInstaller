@@ -6,10 +6,15 @@ import shutil
 import os
 import tempfile
 import threading
+import sys
 
 # Configuration
+if hasattr(sys, 'frozen'):
+    INSTALL_DIR = os.path.dirname(sys.executable)
+else:
+    INSTALL_DIR = os.path.dirname(os.path.abspath(__file__))
+
 RELEASES_API_URL = 'https://api.github.com/repos/GanymedeTeam/GanymedeApp/releases/latest'
-INSTALL_DIR = os.path.dirname(os.path.abspath(__file__))
 APP_DIR = f'{INSTALL_DIR}\\UnityPackage'
 LOCAL_VERSION_FILE = os.path.join(APP_DIR, 'version.txt')
 APPLICATION_EXECUTABLE = os.path.join(APP_DIR, 'Ganymede.exe')
@@ -19,7 +24,10 @@ class UpdateManager:
     def get_latest_version():
         print('Vérification de la dernière version...')
         response = requests.get(RELEASES_API_URL)
-        response.raise_for_status()
+        if response.status_code == 403:
+            print("Accès refusé (403), lancement de l'application...")
+            return None, None
+        response.raise_for_status()  # Raise an exception for other HTTP errors
         release_info = response.json()
         latest_version = release_info['tag_name']
         assets = release_info['assets']
@@ -80,6 +88,7 @@ class UpdateManager:
     @staticmethod
     def launch_application():
         print('Lancement de l\'application...')
+        print(APPLICATION_EXECUTABLE)
         os.startfile(APPLICATION_EXECUTABLE)
 
 class UpdateApp:
@@ -91,28 +100,30 @@ class UpdateApp:
         # Set the icon for the window
         self.root.iconbitmap('ganymede_icon.ico')  # Change to .ico format
 
-        self.version_label = tk.Label(root, text=f"Nouvelle version disponible: {UpdateManager.get_latest_version()[0]}")
-        self.version_label.pack(pady=20)
+        latest_version, _ = UpdateManager.get_latest_version()
+        if latest_version:
+            self.version_label = tk.Label(root, text=f"Nouvelle version disponible: {latest_version}")
+            self.version_label.pack(pady=20)
 
-        self.progress = ttk.Progressbar(root, length=300, mode='determinate')
-        self.progress.pack(pady=5)
+            self.progress = ttk.Progressbar(root, length=300, mode='determinate')
+            self.progress.pack(pady=5)
         
-        self.label = tk.Label(root, text="Téléchargement et mise à jour en cours...")
-        self.label.pack(pady=20)
+            self.label = tk.Label(root, text="Téléchargement et mise à jour en cours...")
+            self.label.pack(pady=20)
 
-        # Initialize progress
-        self.progress['value'] = 0
-        self.progress['maximum'] = 100
+            # Initialize progress
+            self.progress['value'] = 0
+            self.progress['maximum'] = 100
 
-        # Start the update process
-        self.update_thread = threading.Thread(target=self.perform_update)
-        self.update_thread.start()
-        self.root.after(100, self.check_update_thread)
+            # Start the update process
+            self.update_thread = threading.Thread(target=self.perform_update)
+            self.update_thread.start()
+            self.root.after(100, self.check_update_thread)
 
     def perform_update(self):
         try:
             latest_version, zip_url = UpdateManager.get_latest_version()
-            if not UpdateManager.is_up_to_date(latest_version):
+            if latest_version and not UpdateManager.is_up_to_date(latest_version):
                 UpdateManager.download_and_install_update(zip_url)
             else:
                 print("L'application est déjà à jour.")
@@ -142,8 +153,11 @@ def main():
             current_version = '0.0.0'
 
         latest_version, zip_url = UpdateManager.get_latest_version()
+        if latest_version == None and zip_url == None:
+            UpdateManager.launch_application()
+            return
         
-        if latest_version != current_version:
+        if latest_version and latest_version != current_version:
             # Only open Tkinter window if update is needed
             root = tk.Tk()
             global app

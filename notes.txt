@@ -3,3 +3,5 @@ app generated with pyinstaller
 pyinstaller .spec
 
 generate .spec : pyinstaller pythonfile.py --one-file
+
+package d'installation généré avec NSIS
