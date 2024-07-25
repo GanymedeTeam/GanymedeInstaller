@@ -9,10 +9,10 @@ import threading
 
 # Configuration
 RELEASES_API_URL = 'https://api.github.com/repos/GanymedeTeam/GanymedeApp/releases/latest'
-APP_DIR = 'C:/Users/jules/OneDrive/Bureau/Ganymede'
-INSTALL_DIR = 'C:/Users/jules/OneDrive/Bureau/'
-LOCAL_VERSION_FILE = os.path.join(INSTALL_DIR, 'Ganymede/UnityPackages/version.txt')
-APPLICATION_EXECUTABLE = os.path.join(INSTALL_DIR, 'Ganymede/UnityPackages/Ganymede.exe')
+INSTALL_DIR = os.path.dirname(os.path.abspath(__file__))
+APP_DIR = f'{INSTALL_DIR}\\UnityPackage'
+LOCAL_VERSION_FILE = os.path.join(APP_DIR, 'version.txt')
+APPLICATION_EXECUTABLE = os.path.join(APP_DIR, 'Ganymede.exe')
 
 class UpdateManager:
     @staticmethod
