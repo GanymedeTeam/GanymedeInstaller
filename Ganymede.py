@@ -32,7 +32,7 @@ class UpdateManager:
         latest_version = release_info['tag_name']
         assets = release_info['assets']
         for asset in assets:
-            if asset['name'].endswith('.zip'):
+            if 'UnityPackage.zip' in asset['name']:
                 zip_url = asset['browser_download_url']
                 return latest_version, zip_url
         raise Exception('Aucun fichier ZIP trouvé dans la dernière release.')
